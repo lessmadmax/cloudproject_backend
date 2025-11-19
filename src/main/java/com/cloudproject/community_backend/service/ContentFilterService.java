@@ -14,8 +14,8 @@ import java.util.Map;
 
 /**
  * 콘텐츠 필터링 서비스
- * - 기본 욕설 사전 체크 (속도 최적화)
- * - Gemini API 고도화된 프롬프트로 변형 욕설/따돌림/은어 감지
+ * - 기본 욕설 사전 체크
+ * - Gemini API로 변형 욕설 감지
  */
 @Service
 public class ContentFilterService {
@@ -34,37 +34,21 @@ public class ContentFilterService {
         this.geminiApiKey = geminiApiKey;
     }
 
-    /**
-     * 콘텐츠 필터링 메인 메서드
-     *
-     * @param content 검사할 텍스트
-     * @param contentType "POST" | "COMMENT"
-     * @param userId 작성자 ID
-     * @return FilterResult (isBlocked, category, reason, confidence)
-     */
     public FilterResult filterContent(String content, String contentType, Long userId) {
-        // 1. 사전 검증 (기본 욕설 사전 체크 - 빠른 차단)
+        // 기본 욕설 사전 체크
         if (containsBasicProfanity(content)) {
-            System.out.println("기본 욕설 감지: " + content);
             return FilterResult.builder()
                 .isBlocked(true)
                 .category("기본욕설")
-                .reason("기본 욕설이 감지되었습니다")
+                .reason("부적절한 표현 감지")
                 .confidence(1.0)
                 .build();
         }
 
-        // 2. Gemini API 호출 (고도화된 프롬프트)
+        // Gemini API 호출
         try {
             GeminiResponse response = callGeminiAPI(content);
-
-            // 3. 결과 분석 (신뢰도 0.7 이상만 차단)
-            boolean isBlocked = response.isHarmful() && response.getConfidence() > 0.7;
-
-            System.out.println(String.format(
-                "🤖 Gemini 분석 결과 - 차단여부: %s, 카테고리: %s, 신뢰도: %.2f, 이유: %s",
-                isBlocked, response.getCategory(), response.getConfidence(), response.getReason()
-            ));
+            boolean isBlocked = response.isHarmful() && response.getConfidence() >= 0.7;
 
             return FilterResult.builder()
                 .isBlocked(isBlocked)
@@ -75,21 +59,17 @@ public class ContentFilterService {
                 .build();
 
         } catch (Exception e) {
-            System.err.println("❌ Gemini API 호출 실패: " + e.getMessage());
             e.printStackTrace();
-            // 오류 시 안전하게 통과 (false positive 방지)
             return FilterResult.builder()
                 .isBlocked(false)
                 .category("정상")
-                .reason("필터링 오류 - 기본 통과")
+                .reason("API 오류")
                 .confidence(0.0)
                 .build();
         }
     }
 
-    /**
-     * 기본 욕설 사전 체크 (속도 최적화용)
-     */
+    // 기본 욕설 사전 체크
     private boolean containsBasicProfanity(String content) {
         List<String> profanityList = Arrays.asList(
             // 명시적 욕설
@@ -129,7 +109,7 @@ public class ContentFilterService {
     }
 
     /**
-     * Gemini API 호출 (고도화된 프롬프트)
+     * Gemini API 호출 (프롬프트)
      */
     private GeminiResponse callGeminiAPI(String content) throws Exception {
         String prompt = buildAdvancedPrompt(content);
@@ -155,7 +135,7 @@ public class ContentFilterService {
     }
 
     /**
-     * 고도화된 프롬프트 생성
+     * 프롬프트 생성
      */
     private String buildAdvancedPrompt(String content) {
         return "당신은 중학생 커뮤니티의 콘텐츠 필터링 전문가입니다.\n" +
