@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  id-token: write     # OIDC로 AWS Role Assume하려면 필수
+  id-token: write
   contents: read
 
 jobs:
