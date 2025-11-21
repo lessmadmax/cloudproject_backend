@@ -38,8 +38,8 @@ public class Post {
     @JoinColumn(name = "author_id", referencedColumnName = "id")
     private User author;
 
-    @Column(name = "is_bad", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
-    private boolean isBad;
+    @Column(name = "is_bad", nullable = false)
+    private boolean isBad = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "board_type", nullable = false, length = 32)
@@ -54,6 +54,12 @@ public class Post {
     @JsonManagedReference("post-question")
     @JsonIgnoreProperties({"post", "hibernateLazyInitializer"})
     private QuestionPostDetail questionDetails;
+
+    /**
+     * 선배만 댓글 가능 여부
+     */
+    @Column(name = "senior_only_comment", nullable = false)
+    private boolean seniorOnlyComment = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 }

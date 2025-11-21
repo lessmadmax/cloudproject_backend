@@ -21,17 +21,24 @@ import java.time.format.DateTimeFormatter;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final GeminiService geminiService;
+    private final ContentFilterService contentFilterService;
 
     private static final DateTimeFormatter ISO_LOCAL_DATE_TIME = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public Post createPost(Post post, PostCreateRequest request) {
-        boolean isBad = geminiService.checkBadComment(
+        com.cloudproject.community_backend.dto.FilterResult filterResult =
+            contentFilterService.filterContent(
                 post.getTitle() + " " + post.getContent(),
-                post.getAuthor().getUsername()
-        );
+                "POST",
+                post.getAuthor().getId()
+            );
 
-        post.setBad(isBad);
+        post.setBad(filterResult.isBlocked());
+
+        // 선배만 댓글 설정
+        if (request.seniorOnlyComment() != null) {
+            post.setSeniorOnlyComment(request.seniorOnlyComment());
+        }
 
         if (post.getBoardType() == PostBoardType.MEETING) {
             MeetingInfo meetingInfo = request.meetingInfo();

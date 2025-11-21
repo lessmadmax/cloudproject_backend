@@ -43,6 +43,9 @@ public class PostController {
             @Schema(description = "게시판 구분", example = "TALK")
             PostBoardType boardType,
 
+            @Schema(description = "선배만 댓글 가능 여부", example = "false")
+            Boolean seniorOnlyComment,
+
             @Schema(description = "모임 게시글 세부 정보")
             MeetingInfo meetingInfo,
 
@@ -115,5 +118,34 @@ public class PostController {
     public Post getPost(@PathVariable Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
+    }
+
+    @Operation(summary = "게시물 삭제", description = "작성자 본인만 게시물을 삭제할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "게시물 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 필요"),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (작성자만 삭제 가능)"),
+            @ApiResponse(responseCode = "404", description = "게시물을 찾을 수 없음")
+    })
+    @DeleteMapping("/{id}")
+    public void deletePost(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
+        String authenticatedEmail = authentication.getName();
+
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
+
+        // 작성자 확인
+        if (!post.getAuthor().getEmail().equals(authenticatedEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 삭제할 수 있습니다.");
+        }
+
+        postRepository.delete(post);
     }
 }
