@@ -24,7 +24,7 @@ jobs:
           java-version: 17
 
       - name: Build with Maven
-        run: mvn -B package -DskipTests --file pom.xml
+        run: mvn -B package -DskipTests --file pom.xml    # ← 테스트 스킵
 
       # 2️⃣ AWS OIDC 로그인
       - name: Configure AWS Credentials (OIDC)
@@ -48,7 +48,7 @@ jobs:
           IMAGE_TAG="latest"
 
           echo "📦 Building Docker image..."
-          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --load   # ← 여기 수정
+          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --load
 
           echo "⬆️ Pushing image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
