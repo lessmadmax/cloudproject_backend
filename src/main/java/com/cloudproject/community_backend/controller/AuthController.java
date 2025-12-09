@@ -42,7 +42,7 @@ public class AuthController {
         )
     )
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        String token = authService.login(request);
-        return ResponseEntity.ok(new LoginResponse(token));
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
