@@ -38,7 +38,13 @@ public class SecurityConfig {
                     "/api/cloud/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    // 비로그인 사용자도 게시글/댓글 조회 허용
+                    "/api/posts",
+                    "/api/posts/{id}",
+                    "/api/comments/**",
+                    "/api/schools/**",
+                    "/health"
                 ).permitAll()
                 .anyRequest().authenticated() // JWT 유효하면 통과
             )
