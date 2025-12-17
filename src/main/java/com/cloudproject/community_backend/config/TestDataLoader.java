@@ -18,6 +18,8 @@ public class TestDataLoader {
     private final UserRepository userRepository;
     private final SchoolRepository schoolRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final ReportRepository reportRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Bean
@@ -181,6 +183,175 @@ public class TestDataLoader {
             badPost.setBoardType(PostBoardType.TALK);
             badPost.setBad(true);
             postRepository.save(badPost);
+
+            // ========== 최근 7일 내 metrics 테스트용 데이터 ==========
+            LocalDateTime now = LocalDateTime.now();
+
+            // 질문 1: 답변 있음 (1일 전) - 선배가 답변
+            Post q1 = new Post();
+            q1.setTitle("질문 1: 선배 답변 있음");
+            q1.setContent("이 질문에는 선배가 답변을 달았어요");
+            q1.setAuthor(student2);
+            q1.setBoardType(PostBoardType.QUESTION);
+            q1.setBad(false);
+            q1.setCreatedAt(now.minusDays(1));
+            Post savedQ1 = postRepository.save(q1);
+
+            Comment answer1 = new Comment();
+            answer1.setContent("이 질문에 대한 선배의 답변입니다");
+            answer1.setAuthor(senior1);
+            answer1.setPost(savedQ1);
+            answer1.setCreatedAt(now.minusDays(1).plusHours(2)); // 질문 후 2시간 뒤 답변
+            answer1.setBad(false);
+            answer1.setAuthorName(senior1.getUsername());
+            commentRepository.save(answer1);
+
+            // 질문 2: 답변 있음 (3일 전) - 선배가 답변
+            Post q2 = new Post();
+            q2.setTitle("질문 2: 선배 답변 있음");
+            q2.setContent("이 질문에도 선배가 답변을 달았어요");
+            q2.setAuthor(student3);
+            q2.setBoardType(PostBoardType.QUESTION);
+            q2.setBad(false);
+            q2.setCreatedAt(now.minusDays(3));
+            Post savedQ2 = postRepository.save(q2);
+
+            Comment answer2 = new Comment();
+            answer2.setContent("선배의 답변입니다");
+            answer2.setAuthor(senior2);
+            answer2.setPost(savedQ2);
+            answer2.setCreatedAt(now.minusDays(3).plusHours(1)); // 질문 후 1시간 뒤 답변
+            answer2.setBad(false);
+            answer2.setAuthorName(senior2.getUsername());
+            commentRepository.save(answer2);
+
+            // 질문 3: 답변 있음 (5일 전) - 학생이 답변 (요구사항: 학생도 포함)
+            Post q3 = new Post();
+            q3.setTitle("질문 3: 학생 답변 있음");
+            q3.setContent("이 질문에는 학생이 답변을 달았어요");
+            q3.setAuthor(student4);
+            q3.setBoardType(PostBoardType.QUESTION);
+            q3.setBad(false);
+            q3.setCreatedAt(now.minusDays(5));
+            Post savedQ3 = postRepository.save(q3);
+
+            Comment answer3 = new Comment();
+            answer3.setContent("학생의 답변입니다");
+            answer3.setAuthor(student5);
+            answer3.setPost(savedQ3);
+            answer3.setCreatedAt(now.minusDays(5).plusHours(3)); // 질문 후 3시간 뒤 답변
+            answer3.setBad(false);
+            answer3.setAuthorName(student5.getUsername());
+            commentRepository.save(answer3);
+
+            // 질문 4: 답변 없음 (2일 전) - 미답변 백로그
+            Post q4 = new Post();
+            q4.setTitle("질문 4: 답변 없음");
+            q4.setContent("이 질문은 아직 답변이 없어요");
+            q4.setAuthor(student6);
+            q4.setBoardType(PostBoardType.QUESTION);
+            q4.setBad(false);
+            q4.setCreatedAt(now.minusDays(2));
+            postRepository.save(q4);
+
+            // 질문 5: 답변 없음 (4일 전) - 미답변 백로그
+            Post q5 = new Post();
+            q5.setTitle("질문 5: 답변 없음");
+            q5.setContent("이 질문도 아직 답변이 없어요");
+            q5.setAuthor(student7);
+            q5.setBoardType(PostBoardType.QUESTION);
+            q5.setBad(false);
+            q5.setCreatedAt(now.minusDays(4));
+            postRepository.save(q5);
+
+            // 최근 7일 내 일반 게시글/댓글 (불량률 계산용)
+            Post recentPost1 = new Post();
+            recentPost1.setTitle("최근 게시글 1");
+            recentPost1.setContent("최근 7일 내 정상 게시글");
+            recentPost1.setAuthor(student8);
+            recentPost1.setBoardType(PostBoardType.TALK);
+            recentPost1.setBad(false);
+            recentPost1.setCreatedAt(now.minusDays(1));
+            Post savedRecentPost1 = postRepository.save(recentPost1);
+
+            Comment recentComment1 = new Comment();
+            recentComment1.setContent("최근 정상 댓글");
+            recentComment1.setAuthor(student9);
+            recentComment1.setPost(savedRecentPost1);
+            recentComment1.setCreatedAt(now.minusDays(1));
+            recentComment1.setBad(false);
+            recentComment1.setAuthorName(student9.getUsername());
+            commentRepository.save(recentComment1);
+
+            Post recentPost2 = new Post();
+            recentPost2.setTitle("최근 게시글 2");
+            recentPost2.setContent("최근 7일 내 정상 게시글 2");
+            recentPost2.setAuthor(student1);
+            recentPost2.setBoardType(PostBoardType.TALK);
+            recentPost2.setBad(false);
+            recentPost2.setCreatedAt(now.minusDays(2));
+            postRepository.save(recentPost2);
+
+            // 최근 7일 내 불량 게시글/댓글 (불량률 계산용)
+            Post badRecentPost = new Post();
+            badRecentPost.setTitle("불량 게시글");
+            badRecentPost.setContent("욕설 포함 게시글");
+            badRecentPost.setAuthor(student2);
+            badRecentPost.setBoardType(PostBoardType.TALK);
+            badRecentPost.setBad(true);
+            badRecentPost.setCreatedAt(now.minusDays(2));
+            Post savedBadPost = postRepository.save(badRecentPost);
+
+            Comment badRecentComment = new Comment();
+            badRecentComment.setContent("불량 댓글");
+            badRecentComment.setAuthor(student3);
+            badRecentComment.setPost(savedRecentPost1);
+            badRecentComment.setCreatedAt(now.minusDays(1));
+            badRecentComment.setBad(true);
+            badRecentComment.setAuthorName(student3.getUsername());
+            commentRepository.save(badRecentComment);
+
+            // 최근 7일 내 신고 (검토 시간 계산용)
+            Report report1 = Report.builder()
+                .reporter(student1)
+                .targetType(TargetType.POST)
+                .targetId(savedBadPost.getId())
+                .reason(ReportReason.PROFANITY)
+                .status(ReportStatus.APPROVED)
+                .createdAt(now.minusDays(1))
+                .reviewedAt(now.minusDays(1).plusHours(3)) // 3시간 후 검토 완료
+                .reviewer(admin)
+                .reviewNote("욕설 사용으로 승인")
+                .build();
+            reportRepository.save(report1);
+
+            Report report2 = Report.builder()
+                .reporter(student2)
+                .targetType(TargetType.COMMENT)
+                .targetId(badRecentComment.getId())
+                .reason(ReportReason.BULLYING)
+                .status(ReportStatus.APPROVED)
+                .createdAt(now.minusDays(2))
+                .reviewedAt(now.minusDays(2).plusHours(5)) // 5시간 후 검토 완료
+                .reviewer(admin)
+                .reviewNote("괴롭힘으로 승인")
+                .build();
+            reportRepository.save(report2);
+
+            Report report3 = Report.builder()
+                .reporter(student3)
+                .targetType(TargetType.POST)
+                .targetId(savedRecentPost1.getId())
+                .reason(ReportReason.SPAM)
+                .status(ReportStatus.REJECTED)
+                .createdAt(now.minusDays(3))
+                .reviewedAt(now.minusDays(3).plusHours(2)) // 2시간 후 반려
+                .reviewer(admin)
+                .reviewNote("스팸 아님으로 반려")
+                .build();
+            reportRepository.save(report3);
+
+            System.out.println("✅ 최근 7일 metrics 테스트 데이터 추가 완료");
         };
     }
 }
